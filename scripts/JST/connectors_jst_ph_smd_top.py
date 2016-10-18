@@ -2,6 +2,7 @@
 
 import sys
 import os
+from helpers import round_crty_point
 #sys.path.append(os.path.join(sys.path[0],"..","..","kicad_mod")) # load kicad_mod path
 
 
@@ -10,7 +11,8 @@ from KicadModTree import *
 
 output_dir = os.getcwd()
 _3dshapes = "Connectors_JST.3dshapes"+os.sep
-ref_on_ffab = False
+ref_on_silk = False
+fab_ref_inside = False
 fab_line_width = 0.1
 silk_line_width = 0.12
 value_fontsize = [1,1]
@@ -18,8 +20,8 @@ value_fontwidth=0.15
 value_inside = False
 silk_reference_fontsize=[1,1]
 silk_reference_fontwidth=0.15
-fab_reference_fontsize=[0.6,0.6]
-fab_reference_fontwidth=0.1
+fab_reference_fontsize=[2,2]
+fab_reference_fontwidth=0.3
 
 CrtYd_offset = 0.5
 CrtYd_linewidth = 0.05
@@ -28,7 +30,7 @@ pin1_marker_offset = 0.3
 pin1_marker_linelen = 1.25
 fab_pin1_marker_type = 1
 
-pad_to_silk = 0.275
+pad_to_silk = 0.3
 
 out_dir="Connectors_JST.pretty"+os.sep
 
@@ -46,12 +48,15 @@ if len(sys.argv) > 1:
 
 if len(sys.argv) > 2:
     if sys.argv[2] == "TERA":
-        ref_on_ffab = True
+        ref_on_silk = True
+        fab_ref_inside = True
         fab_line_width = 0.05
         silk_line_width = 0.15
         _3dshapes = "tera_Connectors_JST.3dshapes"+os.sep
         value_fontsize = [0.6,0.6]
         value_fontwidth = 0.1
+        fab_reference_fontsize=[0.6,0.6]
+        fab_reference_fontwidth=0.1
         fab_pin1_marker_type = 2
         value_inside = True
     else:
@@ -99,7 +104,7 @@ body_back_protrusion_width = 0.8
 y_min_big_cutout = y_max-1.2
 dx_big_cutout_to_side = 3.45
 
-for pincount in range (2,16):
+for pincount in range (2,16+1):
     x_mid = 0
     x_max = (pincount-1)*pitch/2.0 + 2.975
     silk_x_max = x_max + silk_to_part_offset
@@ -115,18 +120,20 @@ for pincount in range (2,16):
     description = "JST PH series connector, " + part.format(n=pincount) + ", top entry type, surface mount"
     kicad_mod.setDescription(description)
     kicad_mod.setTags('connector jst ph')
+    kicad_mod.setAttribute('smd')
 
     # set general values
-    ref_pos_1=[x_mid, y_min-0.5-silk_reference_fontsize[0]/2.0]
-    ref_pos_2=[x_mid, y_min+0.5+silk_reference_fontsize[0]/2.0]
-    if ref_on_ffab:
-        kicad_mod.append(Text(type='user', text='%R', at=ref_pos_1, layer='F.SilkS',
+    ref_pos_1=[x_mid, y_min-0.5-fab_reference_fontsize[0]/2.0]
+    ref_pos_2=[x_mid, y_min+0.5+fab_reference_fontsize[0]/2.0]
+
+    kicad_mod.append(Text(type='reference', text='REF**', layer='F.Fab',
+        at=(ref_pos_2 if fab_ref_inside else ref_pos_1),
+        size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
+
+    if ref_on_silk:
+        silk_ref_position = [x_mid, y_min-0.5-silk_reference_fontsize[0]/2.0]
+        kicad_mod.append(Text(type='user', text='%R', at=silk_ref_position, layer='F.SilkS',
             size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
-        kicad_mod.append(Text(type='reference', text='REF**', layer='F.Fab',
-            at=ref_pos_2, size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
-    else:
-        kicad_mod.append(Text(type='reference', text='REF**', layer='F.SilkS',
-            at=ref_pos_1, size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
 
     value_pos_y=pad_pos_y+pad_size[1]/2.0+0.5+value_fontsize[0]/2.0
     kicad_mod.append(Text(type='value', text=footprint_name, at=[x_mid, value_pos_y], layer='F.Fab',
@@ -189,7 +196,8 @@ for pincount in range (2,16):
     #kicad_mod.addCircle({'x':start_pos_x-2.95+0.8+0.75, 'y':3.1+0.75}, {'x':0.25, 'y':0}, 'F.SilkS', 0.15)
 
     # create Courtyard
-    kicad_mod.append(RectLine(start=[x_min-CrtYd_offset, y_min-CrtYd_offset],end=[x_max+CrtYd_offset, pad_pos_y+pad_size[1]/2.0+CrtYd_offset],
+    kicad_mod.append(RectLine(start=round_crty_point([x_min-CrtYd_offset, y_min-CrtYd_offset]),
+        end=round_crty_point([x_max+CrtYd_offset, pad_pos_y+pad_size[1]/2.0+CrtYd_offset]),
         layer='F.CrtYd', width=CrtYd_linewidth))
 
     # create pads
@@ -198,7 +206,7 @@ for pincount in range (2,16):
         Y = pad_pos_y
         X = first_pad_x + p * pitch
 
-        num = p
+        num = p+1
         kicad_mod.append(Pad(number=num, type=Pad.TYPE_SMT, shape=Pad.SHAPE_RECT,
                             at=[X, Y], size=pad_size, layers=Pad.LAYERS_SMT))
 

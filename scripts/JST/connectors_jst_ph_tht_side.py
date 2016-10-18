@@ -2,6 +2,7 @@
 
 import sys
 import os
+from helpers import round_crty_point
 #sys.path.append(os.path.join(sys.path[0],"..","..","kicad_mod")) # load kicad_mod path
 
 # export PYTHONPATH="${PYTHONPATH}<path to kicad-footprint-generator directory>"
@@ -10,16 +11,17 @@ from KicadModTree import *
 
 output_dir = os.getcwd()
 _3dshapes = "Connectors_JST.3dshapes"+os.sep
-ref_on_ffab = False
+ref_on_silk = False
+fab_ref_inside = False
 fab_line_width = 0.1
-silk_line_width = 0.15
+silk_line_width = 0.12
 value_fontsize = [1,1]
 value_fontwidth = 0.15
 value_inside = False
 silk_reference_fontsize=[1,1]
 silk_reference_fontwidth=0.15
-fab_reference_fontsize=[0.6,0.6]
-fab_reference_fontwidth=0.1
+fab_reference_fontsize=[2,2]
+fab_reference_fontwidth=0.3
 
 CrtYd_offset = 0.5
 CrtYd_linewidth = 0.05
@@ -47,14 +49,17 @@ if len(sys.argv) > 1:
 
 if len(sys.argv) > 2:
     if sys.argv[2] == "TERA":
-        ref_on_ffab = True
+        ref_on_silk = True
+        fab_ref_inside = True
         fab_line_width = 0.05
-        silk_line_width = 0.12
+        silk_line_width = 0.15
         _3dshapes = "tera_Connectors_JST.3dshapes"+os.sep
         value_fontsize = [0.6,0.6]
         value_fontwidth = 0.1
         fab_pin1_marker_type = 2
         value_inside = True
+        fab_reference_fontsize=[0.6,0.6]
+        fab_reference_fontwidth=0.1
     else:
         _3dshapes = sys.argv[2]
         if _3dshapes.endswith(".3dshapes"):
@@ -91,7 +96,7 @@ silk_y_min = y_min - silk_to_part_offset
 silk_y_main_min = y_main_min - silk_to_part_offset
 silk_y_max = y_max + silk_to_part_offset
 
-for pincount in range (2,16):
+for pincount in range (2,16+1):
     x_mid = (pincount-1)*pitch/2.0
     x_max = (pincount-1)*pitch + 1.95
     silk_x_max = x_max + silk_to_part_offset
@@ -105,26 +110,25 @@ for pincount in range (2,16):
     kicad_mod.setTags('connector jst ph')
 
     # set general values
-    ref_pos_1=[1.5, silk_y_min-0.5-silk_reference_fontsize[0]/2.0]
-    ref_pos_2=[x_mid, 1.5]
-    if ref_on_ffab:
-        kicad_mod.append(Text(type='user', text='%R', at=ref_pos_1, layer='F.SilkS',
+    ref_pos_1=[1.5, silk_y_min-0.5-fab_reference_fontsize[0]/2.0]
+    ref_pos_2=[x_mid, 2]
+
+    kicad_mod.append(Text(type='reference', text='REF**', layer='F.Fab',
+        at=(ref_pos_2 if fab_ref_inside else ref_pos_1),
+        size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
+
+    if ref_on_silk:
+        silk_ref_position = [1.5, silk_y_min-0.5-silk_reference_fontsize[0]/2.0]
+        kicad_mod.append(Text(type='user', text='%R', at=silk_ref_position, layer='F.SilkS',
             size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
-        kicad_mod.append(Text(type='reference', text='REF**', layer='F.Fab',
-            at=ref_pos_2, size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
-    else:
-        kicad_mod.append(Text(type='reference', text='REF**', layer='F.SilkS',
-            at=ref_pos_1, size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
 
     if value_inside:
         value_pos_y = y_max+-0.5-value_fontsize[0]/2.0
     else:
         value_pos_y = y_max+0.5+value_fontsize[0]/2.0
 
-    kicad_mod.append(Text(type='value', text=footprint_name, at=[x_mid,value_pos_y], layer='F.Fab',
+    kicad_mod.append(Text(type='value', text=footprint_name, at=[x_mid, value_pos_y], layer='F.Fab',
         size=value_fontsize, thickness=value_fontwidth))
-
-
     # create Silkscreen
     poly_big_cutout=[{'x':0.5, 'y':silk_y_max}
                               ,{'x':0.5, 'y':2}
@@ -162,7 +166,8 @@ for pincount in range (2,16):
         layer='F.SilkS', width=silk_line_width))
 
     # create Courtyard
-    kicad_mod.append(RectLine(start=[x_min-CrtYd_offset, y_min-CrtYd_offset],end=[x_max+CrtYd_offset, y_max+CrtYd_offset],
+    kicad_mod.append(RectLine(start=round_crty_point([x_min-CrtYd_offset, y_min-CrtYd_offset]),
+        end=round_crty_point([x_max+CrtYd_offset, y_max+CrtYd_offset]),
         layer='F.CrtYd', width=CrtYd_linewidth))
 
     # Fab layer outline
