@@ -151,6 +151,7 @@ for pincount in range (2,16):
     description = "JST PH series connector, " + part.format(n=pincount) + ", side entry type, surface mount, Datasheet: http://www.jst-mfg.com/product/pdf/eng/ePH.pdf"
     kicad_mod.setDescription(description)
     kicad_mod.setTags('connector jst ph')
+    kicad_mod.setAttribute("smd")
 
     # set general values
     ref_pos_1=[x_mid, pad_pos_y-pad_size[1]/2.0-0.5-silk_reference_fontsize[0]/2.0]
