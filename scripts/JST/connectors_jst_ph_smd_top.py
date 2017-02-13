@@ -11,6 +11,7 @@ from KicadModTree import *
 output_dir = os.getcwd()
 _3dshapes = "Connectors_JST.3dshapes"+os.sep
 ref_on_ffab = False
+main_ref_on_silk = True
 fab_line_width = 0.1
 silk_line_width = 0.12
 value_fontsize = [1,1]
@@ -23,6 +24,7 @@ fab_reference_fontwidth=0.1
 
 CrtYd_offset = 0.5
 CrtYd_linewidth = 0.05
+CrtYd_grid = 0.01
 
 pin1_marker_offset = 0.3
 pin1_marker_linelen = 1.25
@@ -30,23 +32,17 @@ fab_pin1_marker_type = 1
 
 pad_to_silk = 0.275
 
-out_dir="Connectors_JST.pretty"+os.sep
+def round_to(n, precision):
+    correction = 0.5 if n >= 0 else -0.5
+    return int( n/precision+correction ) * precision
+
+def round_crty_point(point):
+    return [round_to(point[0],CrtYd_grid),round_to(point[1],CrtYd_grid)]
 
 if len(sys.argv) > 1:
-    out_dir = sys.argv[1]
-    if out_dir.endswith(".pretty"):
-        out_dir += os.sep
-    if not out_dir.endswith(".pretty"+os.sep):
-        out_dir += ".pretty"+os.sep
-
-    if os.path.isabs(out_dir) and os.path.isdir(out_dir):
-        output_dir = out_dir
-    else:
-        output_dir = os.path.join(os.getcwd(),out_dir)
-
-if len(sys.argv) > 2:
-    if sys.argv[2] == "TERA":
+    if sys.argv[1] == "TERA":
         ref_on_ffab = True
+        main_ref_on_silk = False
         fab_line_width = 0.05
         silk_line_width = 0.15
         _3dshapes = "tera_Connectors_JST.3dshapes"+os.sep
@@ -54,12 +50,48 @@ if len(sys.argv) > 2:
         value_fontwidth = 0.1
         fab_pin1_marker_type = 2
         value_inside = True
-    else:
-        _3dshapes = sys.argv[2]
-        if _3dshapes.endswith(".3dshapes"):
-            _3dshapes += os.sep
-        if not _3dshapes.endswith(".3dshapes"+os.sep):
-            _3dshapes += ".3dshapes"+os.sep
+    elif sys.argv[1] == "KLCv1.1":
+        _3dshapes = "Connectors_JST.3dshapes"+os.sep
+        ref_on_ffab = False
+        main_ref_on_silk = True
+        fab_line_width = 0.1
+        silk_line_width = 0.15
+        value_fontsize = [1,1]
+        value_fontwidth=0.15
+        value_inside = False
+    elif sys.argv[1] == "KLCv1.2":
+        _3dshapes = "Connectors_JST.3dshapes"+os.sep
+        ref_on_ffab = True
+        main_ref_on_silk = True
+        fab_line_width = 0.1
+        silk_line_width = 0.12
+        value_fontsize = [1,1]
+        value_fontwidth = 0.15
+        value_inside = False
+        silk_reference_fontsize=[1,1]
+        silk_reference_fontwidth=0.15
+        fab_reference_fontsize=[1,1]
+        fab_reference_fontwidth=0.15
+
+out_dir="Connectors_JST.pretty"+os.sep
+if len(sys.argv) > 2:
+    out_dir = sys.argv[1]
+    if out_dir.endswith(".pretty"):
+        out_dir += os.sep
+    if not out_dir.endswith(".pretty"+os.sep):
+        out_dir += ".pretty"+os.sep
+
+if os.path.isabs(out_dir) and os.path.isdir(out_dir):
+    output_dir = out_dir
+else:
+    output_dir = os.path.join(os.getcwd(),out_dir)
+
+if len(sys.argv) > 3:
+    _3dshapes = sys.argv[2]
+    if _3dshapes.endswith(".3dshapes"):
+        _3dshapes += os.sep
+    if not _3dshapes.endswith(".3dshapes"+os.sep):
+        _3dshapes += ".3dshapes"+os.sep
 
 if output_dir and not output_dir.endswith(os.sep):
     output_dir += os.sep
@@ -112,18 +144,23 @@ for pincount in range (2,16):
     footprint_name = prefix + part.format(n=pincount) + suffix.format(n=pincount, p=pitch)
 
     kicad_mod = Footprint(footprint_name)
-    description = "JST PH series connector, " + part.format(n=pincount) + ", top entry type, surface mount"
+    description = "JST PH series connector, " + part.format(n=pincount) + ", top entry type, surface mount, Datasheet: http://www.jst-mfg.com/product/pdf/eng/ePH.pdf"
     kicad_mod.setDescription(description)
     kicad_mod.setTags('connector jst ph')
 
     # set general values
     ref_pos_1=[x_mid, y_min-0.5-silk_reference_fontsize[0]/2.0]
     ref_pos_2=[x_mid, y_min+0.5+silk_reference_fontsize[0]/2.0]
-    if ref_on_ffab:
+    if ref_on_ffab and not main_ref_on_silk:
         kicad_mod.append(Text(type='user', text='%R', at=ref_pos_1, layer='F.SilkS',
             size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
         kicad_mod.append(Text(type='reference', text='REF**', layer='F.Fab',
             at=ref_pos_2, size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
+    elif ref_on_ffab and main_ref_on_silk:
+        kicad_mod.append(Text(type='user', text='%R', at=ref_pos_2, layer='F.Fab',
+            size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
+        kicad_mod.append(Text(type='reference', text='REF**', layer='F.SilkS',
+            at=ref_pos_1, size=fab_reference_fontsize, thickness=fab_reference_fontwidth))
     else:
         kicad_mod.append(Text(type='reference', text='REF**', layer='F.SilkS',
             at=ref_pos_1, size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
@@ -189,7 +226,13 @@ for pincount in range (2,16):
     #kicad_mod.addCircle({'x':start_pos_x-2.95+0.8+0.75, 'y':3.1+0.75}, {'x':0.25, 'y':0}, 'F.SilkS', 0.15)
 
     # create Courtyard
-    kicad_mod.append(RectLine(start=[x_min-CrtYd_offset, y_min-CrtYd_offset],end=[x_max+CrtYd_offset, pad_pos_y+pad_size[1]/2.0+CrtYd_offset],
+    part_x_min = x_left_mount_pad - mount_pad_size[0]/2.0
+    part_x_max = -x_left_mount_pad + mount_pad_size[0]/2.0
+    part_y_min = y_min
+    part_y_max = pad_pos_y+pad_size[1]/2.0
+
+    kicad_mod.append(RectLine(start=round_crty_point([part_x_min-CrtYd_offset, part_y_min-CrtYd_offset]),
+        end=round_crty_point([part_x_max+CrtYd_offset, part_y_max+CrtYd_offset]),
         layer='F.CrtYd', width=CrtYd_linewidth))
 
     # create pads
