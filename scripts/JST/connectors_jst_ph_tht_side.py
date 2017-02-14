@@ -29,6 +29,7 @@ CrtYd_grid = 0.01
 pin1_marker_offset = 0.3
 pin1_marker_linelen = 1.25
 fab_pin1_marker_type = 1
+silk_pin1_marker_type = 1
 
 pad_to_silk = 0.2
 pad_size=[1.2, 1.7]
@@ -74,6 +75,7 @@ if len(sys.argv) > 1:
         fab_reference_fontsize=[1,1]
         fab_reference_fontwidth=0.15
         fab_pin1_marker_type = 2
+        silk_pin1_marker_type = 2
 
 out_dir="Connectors_JST.pretty"+os.sep
 if len(sys.argv) > 2:
@@ -139,7 +141,7 @@ for pincount in range (2,16):
 
     # set general values
     ref_pos_1=[1.5, silk_y_min-0.5-silk_reference_fontsize[0]/2.0]
-    ref_pos_2=[x_mid, 1.5]
+    ref_pos_2=[x_mid, 2.5]
     if ref_on_ffab and not main_ref_on_silk:
         kicad_mod.append(Text(type='user', text='%R', at=ref_pos_1, layer='F.SilkS',
             size=silk_reference_fontsize, thickness=silk_reference_fontwidth))
@@ -247,16 +249,32 @@ for pincount in range (2,16):
         {'x':0.4, 'y':-1.6},
         {'x':0, 'y':-1.2}
     ]
-    kicad_mod.append(PolygoneLine(polygone=poly_pin1_marker, layer='F.SilkS', width=silk_line_width))
+    if silk_pin1_marker_type == 1:
+        kicad_mod.append(PolygoneLine(polygone=poly_pin1_marker, layer='F.SilkS', width=silk_line_width))
+    if silk_pin1_marker_type == 2:
+        silk_pin1_marker_t2_x = -pad_size[0]/2.0-pad_to_silk
+
+        kicad_mod.append(Line(start=[silk_pin1_marker_t2_x, silk_y_main_min],
+            end=[silk_pin1_marker_t2_x, -pad_size[1]/2.0-pad_to_silk],layer='F.SilkS', width=silk_line_width))
 
     if fab_pin1_marker_type == 1:
         kicad_mod.append(PolygoneLine(polygone=poly_pin1_marker, layer='F.Fab', width=fab_line_width))
 
     if fab_pin1_marker_type == 2:
         poly_pin1_marker_type2 = [
-            {'x':-1, 'y':y_main_min},
-            {'x':0, 'y':y_main_min+1},
-            {'x':1, 'y':y_main_min}
+            {'x':-0.75, 'y':y_main_min},
+            {'x':0, 'y':y_main_min+0.75},
+            {'x':0.75, 'y':y_main_min}
+        ]
+        kicad_mod.append(PolygoneLine(polygone=poly_pin1_marker_type2, layer='F.Fab', width=fab_line_width))
+
+    if fab_pin1_marker_type == 3:
+        fab_pin1_marker_t3_y = pad_size[1]/2.0
+        poly_pin1_marker_type2 = [
+            {'x':0, 'y':fab_pin1_marker_t3_y},
+            {'x':-0.5, 'y':fab_pin1_marker_t3_y+0.5},
+            {'x':0.5, 'y':fab_pin1_marker_t3_y+0.5},
+            {'x':0, 'y':fab_pin1_marker_t3_y}
         ]
         kicad_mod.append(PolygoneLine(polygone=poly_pin1_marker_type2, layer='F.Fab', width=fab_line_width))
     #Add a model
