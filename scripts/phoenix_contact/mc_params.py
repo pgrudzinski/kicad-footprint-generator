@@ -52,11 +52,13 @@ Params = namedtuple("Params",[
     'order_info',
     'mount_hole_to_pin',
     'side_to_pin',
-    'back_to_pin'
+    'back_to_pin',
+    'pin_Sx',
+    'pin_Sy'
 ])
 
 def generate_params(num_pins, series_name, pin_pitch, angled, flanged, order_info, mount_hole=False, mount_hole_to_pin=None,
-            side_to_pin=None, back_to_pin=None, min_pad_to_pad_clearance=seriesParams.MSTB_min_pad_to_pad_clearance):
+            side_to_pin=None, back_to_pin=None, min_pad_to_pad_clearance=seriesParams.min_pad_to_pad_clearance):
     nominal_pin_Sx = seriesParams.drill + 2 * seriesParams.annular_ring
     nominal_pin_Sy = seriesParams.drill + 2 * 1.2
     return Params(
