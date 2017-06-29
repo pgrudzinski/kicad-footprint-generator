@@ -1,6 +1,32 @@
 from collections import namedtuple
 from global_params import generate_footprint_name
 
+class seriesParams():
+    drill = 1.4
+    annular_ring = 0.35 # overwritten by minimum pad to pad clearance.
+    mount_drill = 2.4
+    mount_screw_head_r = 2.1
+    mount_screw_info = "ISO 1481-ST 2.2x6.5 C or ISO 7049-ST 2.2x6.5 C (http://www.fasteners.eu/standards/ISO/7049/)"
+
+    # Connector voltage ratings:
+    # Rated voltage (III/3) 250 V
+    # Rated voltage (III/2) 320 V
+    # Rated voltage (II/2) 400 V
+    # Rated surge voltage (III/3) 4 kV
+    # Rated surge voltage (III/2) 4 kV
+    # Rated surge voltage (II/2) 4 kV
+    # VDE 0110-1/4.97 4kV -> 3mm clearance
+    MSTB_min_pad_to_pad_clearance = 3.0
+
+    #Rated surge voltage (III/3) 6 kV
+    #Rated surge voltage (III/2) 6 kV
+    #Rated surge voltage (II/2) 6 kV
+    #Rated voltage (III/3) 400 V
+    #Rated voltage (III/2) 630 V
+    #Rated voltage (II/2) 630 V
+    # VDE 0110-1/4.97 6kV -> 5.5mm
+    GMSTB_min_pad_to_pad_clearance = 5.5
+
 Params = namedtuple("Params",[
     'series_name',
     'file_name',
@@ -11,11 +37,15 @@ Params = namedtuple("Params",[
     'mount_hole',
     'order_info',
     'mount_hole_to_pin',
-    'side_to_pin'
+    'side_to_pin',
+    'pin_Sx',
+    'pin_Sy'
 ])
 
-def generate_params(num_pins, series_name, pin_pitch, angled, flanged, order_info, mount_hole=False, mount_hole_to_pin=None, side_to_pin=None):
-
+def generate_params(num_pins, series_name, pin_pitch, angled, flanged, order_info, mount_hole=False, mount_hole_to_pin=None,
+        side_to_pin=None, min_pad_to_pad_clearance=seriesParams.MSTB_min_pad_to_pad_clearance):
+    nominal_pin_Sx = seriesParams.drill + 2 * seriesParams.annular_ring
+    nominal_pin_Sy = seriesParams.drill + 2 * 1.1
     return Params(
         series_name=series_name,
         file_name=generate_footprint_name(series_name, num_pins, pin_pitch, angled, mount_hole, flanged),
@@ -26,7 +56,9 @@ def generate_params(num_pins, series_name, pin_pitch, angled, flanged, order_inf
         mount_hole=mount_hole,
         order_info=order_info,
         mount_hole_to_pin=pin_pitch if mount_hole_to_pin is None else mount_hole_to_pin,
-        side_to_pin=(3*pin_pitch if flanged else pin_pitch+2)/2.0 if side_to_pin is None else side_to_pin
+        side_to_pin=(3*pin_pitch if flanged else pin_pitch+2)/2.0 if side_to_pin is None else side_to_pin,
+        pin_Sx= nominal_pin_Sx if (pin_pitch - nominal_pin_Sx) >= min_pad_to_pad_clearance else (pin_pitch - min_pad_to_pad_clearance),
+        pin_Sy = nominal_pin_Sy
     )
 
 
@@ -230,112 +262,104 @@ all_params = {
     ##################################################################################################################
     # High Voltage Versions (pin pitch 7.5mm)
     ##################################################################################################################
-    'GMSTBA_01x02_G_7.50mm' : generate_params( 2, "GMSTBA-G", 7.50, True, False, {'1766343':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x03_G_7.50mm' : generate_params( 3, "GMSTBA-G", 7.50, True, False, {'1766356':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x04_G_7.50mm' : generate_params( 4, "GMSTBA-G", 7.50, True, False, {'1766369':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x05_G_7.50mm' : generate_params( 5, "GMSTBA-G", 7.50, True, False, {'1766372':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x06_G_7.50mm' : generate_params( 6, "GMSTBA-G", 7.50, True, False, {'1766385':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x07_G_7.50mm' : generate_params( 7, "GMSTBA-G", 7.50, True, False, {'1766398':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x08_G_7.50mm' : generate_params( 8, "GMSTBA-G", 7.50, True, False, {'1766408':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x09_G_7.50mm' : generate_params( 9, "GMSTBA-G", 7.50, True, False, {'1766411':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x10_G_7.50mm' : generate_params(10, "GMSTBA-G", 7.50, True, False, {'1766424':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x11_G_7.50mm' : generate_params(11, "GMSTBA-G", 7.50, True, False, {'1766437':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBA_01x12_G_7.50mm' : generate_params(12, "GMSTBA-G", 7.50, True, False, {'1766440':'12A 630V'}, side_to_pin=3.75),
+    'GMSTBA_01x02_G_7.50mm' : generate_params( 2, "GMSTBA-G", 7.50, True, False, {'1766343':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x03_G_7.50mm' : generate_params( 3, "GMSTBA-G", 7.50, True, False, {'1766356':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x04_G_7.50mm' : generate_params( 4, "GMSTBA-G", 7.50, True, False, {'1766369':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x05_G_7.50mm' : generate_params( 5, "GMSTBA-G", 7.50, True, False, {'1766372':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x06_G_7.50mm' : generate_params( 6, "GMSTBA-G", 7.50, True, False, {'1766385':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x07_G_7.50mm' : generate_params( 7, "GMSTBA-G", 7.50, True, False, {'1766398':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x08_G_7.50mm' : generate_params( 8, "GMSTBA-G", 7.50, True, False, {'1766408':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x09_G_7.50mm' : generate_params( 9, "GMSTBA-G", 7.50, True, False, {'1766411':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x10_G_7.50mm' : generate_params(10, "GMSTBA-G", 7.50, True, False, {'1766424':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x11_G_7.50mm' : generate_params(11, "GMSTBA-G", 7.50, True, False, {'1766437':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x12_G_7.50mm' : generate_params(12, "GMSTBA-G", 7.50, True, False, {'1766440':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ##################################################################################################################
-    'GMSTBVA_01x02_G_7.50mm' : generate_params( 2, "GMSTBVA-G", 7.50, False, False, {'1766660':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x03_G_7.50mm' : generate_params( 3, "GMSTBVA-G", 7.50, False, False, {'1766673':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x04_G_7.50mm' : generate_params( 4, "GMSTBVA-G", 7.50, False, False, {'1766686':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x05_G_7.50mm' : generate_params( 5, "GMSTBVA-G", 7.50, False, False, {'1766699':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x06_G_7.50mm' : generate_params( 6, "GMSTBVA-G", 7.50, False, False, {'1766709':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x07_G_7.50mm' : generate_params( 7, "GMSTBVA-G", 7.50, False, False, {'1766712':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x08_G_7.50mm' : generate_params( 8, "GMSTBVA-G", 7.50, False, False, {'1766725':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x09_G_7.50mm' : generate_params( 9, "GMSTBVA-G", 7.50, False, False, {'1766738':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x10_G_7.50mm' : generate_params(10, "GMSTBVA-G", 7.50, False, False, {'1766741':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x11_G_7.50mm' : generate_params(11, "GMSTBVA-G", 7.50, False, False, {'1766754':'12A 630V'}, side_to_pin=3.75),
-    'GMSTBVA_01x12_G_7.50mm' : generate_params(12, "GMSTBVA-G", 7.50, False, False, {'1766767':'12A 630V'}, side_to_pin=3.75),
+    'GMSTBVA_01x02_G_7.50mm' : generate_params( 2, "GMSTBVA-G", 7.50, False, False, {'1766660':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x03_G_7.50mm' : generate_params( 3, "GMSTBVA-G", 7.50, False, False, {'1766673':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x04_G_7.50mm' : generate_params( 4, "GMSTBVA-G", 7.50, False, False, {'1766686':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x05_G_7.50mm' : generate_params( 5, "GMSTBVA-G", 7.50, False, False, {'1766699':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x06_G_7.50mm' : generate_params( 6, "GMSTBVA-G", 7.50, False, False, {'1766709':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x07_G_7.50mm' : generate_params( 7, "GMSTBVA-G", 7.50, False, False, {'1766712':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x08_G_7.50mm' : generate_params( 8, "GMSTBVA-G", 7.50, False, False, {'1766725':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x09_G_7.50mm' : generate_params( 9, "GMSTBVA-G", 7.50, False, False, {'1766738':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x10_G_7.50mm' : generate_params(10, "GMSTBVA-G", 7.50, False, False, {'1766741':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x11_G_7.50mm' : generate_params(11, "GMSTBVA-G", 7.50, False, False, {'1766754':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x12_G_7.50mm' : generate_params(12, "GMSTBVA-G", 7.50, False, False, {'1766767':'12A 630V'}, side_to_pin=3.75, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ##################################################################################################################
     # High Voltage Versions (pin pitch 7.62mm)
     ##################################################################################################################
-    'GMSTBA_01x02_G_7.62mm' : generate_params( 2, "GMSTBA-G", 7.62, True, False, {'1766233':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x03_G_7.62mm' : generate_params( 3, "GMSTBA-G", 7.62, True, False, {'1766246':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x04_G_7.62mm' : generate_params( 4, "GMSTBA-G", 7.62, True, False, {'1766259':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x05_G_7.62mm' : generate_params( 5, "GMSTBA-G", 7.62, True, False, {'1766262':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x06_G_7.62mm' : generate_params( 6, "GMSTBA-G", 7.62, True, False, {'1766275':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x07_G_7.62mm' : generate_params( 7, "GMSTBA-G", 7.62, True, False, {'1766288':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x08_G_7.62mm' : generate_params( 8, "GMSTBA-G", 7.62, True, False, {'1766291':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x09_G_7.62mm' : generate_params( 9, "GMSTBA-G", 7.62, True, False, {'1766301':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x10_G_7.62mm' : generate_params(10, "GMSTBA-G", 7.62, True, False, {'1766314':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x11_G_7.62mm' : generate_params(11, "GMSTBA-G", 7.62, True, False, {'1766327':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBA_01x12_G_7.62mm' : generate_params(12, "GMSTBA-G", 7.62, True, False, {'1766330':'12A 630V'}, side_to_pin=3.81),
+    'GMSTBA_01x02_G_7.62mm' : generate_params( 2, "GMSTBA-G", 7.62, True, False, {'1766233':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x03_G_7.62mm' : generate_params( 3, "GMSTBA-G", 7.62, True, False, {'1766246':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x04_G_7.62mm' : generate_params( 4, "GMSTBA-G", 7.62, True, False, {'1766259':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x05_G_7.62mm' : generate_params( 5, "GMSTBA-G", 7.62, True, False, {'1766262':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x06_G_7.62mm' : generate_params( 6, "GMSTBA-G", 7.62, True, False, {'1766275':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x07_G_7.62mm' : generate_params( 7, "GMSTBA-G", 7.62, True, False, {'1766288':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x08_G_7.62mm' : generate_params( 8, "GMSTBA-G", 7.62, True, False, {'1766291':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x09_G_7.62mm' : generate_params( 9, "GMSTBA-G", 7.62, True, False, {'1766301':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x10_G_7.62mm' : generate_params(10, "GMSTBA-G", 7.62, True, False, {'1766314':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x11_G_7.62mm' : generate_params(11, "GMSTBA-G", 7.62, True, False, {'1766327':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBA_01x12_G_7.62mm' : generate_params(12, "GMSTBA-G", 7.62, True, False, {'1766330':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ###################################################################################################################
-    'GMSTB_01x02_GF_7.62mm' : generate_params( 2, "GMSTB-GF", 7.62, True, True, {'1806229':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x03_GF_7.62mm' : generate_params( 3, "GMSTB-GF", 7.62, True, True, {'1806232':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x04_GF_7.62mm' : generate_params( 4, "GMSTB-GF", 7.62, True, True, {'1806245':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x05_GF_7.62mm' : generate_params( 5, "GMSTB-GF", 7.62, True, True, {'1806258':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x06_GF_7.62mm' : generate_params( 6, "GMSTB-GF", 7.62, True, True, {'1806261':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x07_GF_7.62mm' : generate_params( 7, "GMSTB-GF", 7.62, True, True, {'1806274':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x08_GF_7.62mm' : generate_params( 8, "GMSTB-GF", 7.62, True, True, {'1806287':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x09_GF_7.62mm' : generate_params( 9, "GMSTB-GF", 7.62, True, True, {'1806290':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x10_GF_7.62mm' : generate_params(10, "GMSTB-GF", 7.62, True, True, {'1806300':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x11_GF_7.62mm' : generate_params(11, "GMSTB-GF", 7.62, True, True, {'1806313':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x12_GF_7.62mm' : generate_params(12, "GMSTB-GF", 7.62, True, True, {'1806326':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
+    'GMSTB_01x02_GF_7.62mm' : generate_params( 2, "GMSTB-GF", 7.62, True, True, {'1806229':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x03_GF_7.62mm' : generate_params( 3, "GMSTB-GF", 7.62, True, True, {'1806232':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x04_GF_7.62mm' : generate_params( 4, "GMSTB-GF", 7.62, True, True, {'1806245':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x05_GF_7.62mm' : generate_params( 5, "GMSTB-GF", 7.62, True, True, {'1806258':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x06_GF_7.62mm' : generate_params( 6, "GMSTB-GF", 7.62, True, True, {'1806261':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x07_GF_7.62mm' : generate_params( 7, "GMSTB-GF", 7.62, True, True, {'1806274':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x08_GF_7.62mm' : generate_params( 8, "GMSTB-GF", 7.62, True, True, {'1806287':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x09_GF_7.62mm' : generate_params( 9, "GMSTB-GF", 7.62, True, True, {'1806290':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x10_GF_7.62mm' : generate_params(10, "GMSTB-GF", 7.62, True, True, {'1806300':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x11_GF_7.62mm' : generate_params(11, "GMSTB-GF", 7.62, True, True, {'1806313':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x12_GF_7.62mm' : generate_params(12, "GMSTB-GF", 7.62, True, True, {'1806326':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ###################################################################################################################
-    'GMSTB_01x02_GF_7.62mm_MH' : generate_params( 2, "GMSTB-GF", 7.62, True, True, {'1806229':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x03_GF_7.62mm_MH' : generate_params( 3, "GMSTB-GF", 7.62, True, True, {'1806232':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x04_GF_7.62mm_MH' : generate_params( 4, "GMSTB-GF", 7.62, True, True, {'1806245':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x05_GF_7.62mm_MH' : generate_params( 5, "GMSTB-GF", 7.62, True, True, {'1806258':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x06_GF_7.62mm_MH' : generate_params( 6, "GMSTB-GF", 7.62, True, True, {'1806261':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x07_GF_7.62mm_MH' : generate_params( 7, "GMSTB-GF", 7.62, True, True, {'1806274':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x08_GF_7.62mm_MH' : generate_params( 8, "GMSTB-GF", 7.62, True, True, {'1806287':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x09_GF_7.62mm_MH' : generate_params( 9, "GMSTB-GF", 7.62, True, True, {'1806290':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x10_GF_7.62mm_MH' : generate_params(10, "GMSTB-GF", 7.62, True, True, {'1806300':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x11_GF_7.62mm_MH' : generate_params(11, "GMSTB-GF", 7.62, True, True, {'1806313':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTB_01x12_GF_7.62mm_MH' : generate_params(12, "GMSTB-GF", 7.62, True, True, {'1806326':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
+    'GMSTB_01x02_GF_7.62mm_MH' : generate_params( 2, "GMSTB-GF", 7.62, True, True, {'1806229':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x03_GF_7.62mm_MH' : generate_params( 3, "GMSTB-GF", 7.62, True, True, {'1806232':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x04_GF_7.62mm_MH' : generate_params( 4, "GMSTB-GF", 7.62, True, True, {'1806245':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x05_GF_7.62mm_MH' : generate_params( 5, "GMSTB-GF", 7.62, True, True, {'1806258':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x06_GF_7.62mm_MH' : generate_params( 6, "GMSTB-GF", 7.62, True, True, {'1806261':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x07_GF_7.62mm_MH' : generate_params( 7, "GMSTB-GF", 7.62, True, True, {'1806274':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x08_GF_7.62mm_MH' : generate_params( 8, "GMSTB-GF", 7.62, True, True, {'1806287':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x09_GF_7.62mm_MH' : generate_params( 9, "GMSTB-GF", 7.62, True, True, {'1806290':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x10_GF_7.62mm_MH' : generate_params(10, "GMSTB-GF", 7.62, True, True, {'1806300':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x11_GF_7.62mm_MH' : generate_params(11, "GMSTB-GF", 7.62, True, True, {'1806313':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTB_01x12_GF_7.62mm_MH' : generate_params(12, "GMSTB-GF", 7.62, True, True, {'1806326':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ###################################################################################################################
-    'GMSTBVA_01x02_G_7.62mm' : generate_params( 2, "GMSTBVA-G", 7.62, False, False, {'1766770':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x03_G_7.62mm' : generate_params( 3, "GMSTBVA-G", 7.62, False, False, {'1766783':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x04_G_7.62mm' : generate_params( 4, "GMSTBVA-G", 7.62, False, False, {'1766796':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x05_G_7.62mm' : generate_params( 5, "GMSTBVA-G", 7.62, False, False, {'1766806':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x06_G_7.62mm' : generate_params( 6, "GMSTBVA-G", 7.62, False, False, {'1766819':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x07_G_7.62mm' : generate_params( 7, "GMSTBVA-G", 7.62, False, False, {'1766822':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x08_G_7.62mm' : generate_params( 8, "GMSTBVA-G", 7.62, False, False, {'1766835':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x09_G_7.62mm' : generate_params( 9, "GMSTBVA-G", 7.62, False, False, {'1766848':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x10_G_7.62mm' : generate_params(10, "GMSTBVA-G", 7.62, False, False, {'1766851':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x11_G_7.62mm' : generate_params(11, "GMSTBVA-G", 7.62, False, False, {'1766864':'12A 630V'}, side_to_pin=3.81),
-    'GMSTBVA_01x12_G_7.62mm' : generate_params(12, "GMSTBVA-G", 7.62, False, False, {'1766877':'12A 630V'}, side_to_pin=3.81),
+    'GMSTBVA_01x02_G_7.62mm' : generate_params( 2, "GMSTBVA-G", 7.62, False, False, {'1766770':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x03_G_7.62mm' : generate_params( 3, "GMSTBVA-G", 7.62, False, False, {'1766783':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x04_G_7.62mm' : generate_params( 4, "GMSTBVA-G", 7.62, False, False, {'1766796':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x05_G_7.62mm' : generate_params( 5, "GMSTBVA-G", 7.62, False, False, {'1766806':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x06_G_7.62mm' : generate_params( 6, "GMSTBVA-G", 7.62, False, False, {'1766819':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x07_G_7.62mm' : generate_params( 7, "GMSTBVA-G", 7.62, False, False, {'1766822':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x08_G_7.62mm' : generate_params( 8, "GMSTBVA-G", 7.62, False, False, {'1766835':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x09_G_7.62mm' : generate_params( 9, "GMSTBVA-G", 7.62, False, False, {'1766848':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x10_G_7.62mm' : generate_params(10, "GMSTBVA-G", 7.62, False, False, {'1766851':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x11_G_7.62mm' : generate_params(11, "GMSTBVA-G", 7.62, False, False, {'1766864':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBVA_01x12_G_7.62mm' : generate_params(12, "GMSTBVA-G", 7.62, False, False, {'1766877':'12A 630V'}, side_to_pin=3.81, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ###################################################################################################################
-    'GMSTBV_01x02_GF_7.62mm' : generate_params( 2, "GMSTBV-GF", 7.62, False, True, {'1829154':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x03_GF_7.62mm' : generate_params( 3, "GMSTBV-GF", 7.62, False, True, {'1829167':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x04_GF_7.62mm' : generate_params( 4, "GMSTBV-GF", 7.62, False, True, {'1829170':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x05_GF_7.62mm' : generate_params( 5, "GMSTBV-GF", 7.62, False, True, {'1829183':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x06_GF_7.62mm' : generate_params( 6, "GMSTBV-GF", 7.62, False, True, {'1829196':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x07_GF_7.62mm' : generate_params( 7, "GMSTBV-GF", 7.62, False, True, {'1829206':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x08_GF_7.62mm' : generate_params( 8, "GMSTBV-GF", 7.62, False, True, {'1829219':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x09_GF_7.62mm' : generate_params( 9, "GMSTBV-GF", 7.62, False, True, {'1829222':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x10_GF_7.62mm' : generate_params(10, "GMSTBV-GF", 7.62, False, True, {'1829235':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x11_GF_7.62mm' : generate_params(11, "GMSTBV-GF", 7.62, False, True, {'1829248':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x12_GF_7.62mm' : generate_params(12, "GMSTBV-GF", 7.62, False, True, {'1829251':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1),
+    'GMSTBV_01x02_GF_7.62mm' : generate_params( 2, "GMSTBV-GF", 7.62, False, True, {'1829154':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x03_GF_7.62mm' : generate_params( 3, "GMSTBV-GF", 7.62, False, True, {'1829167':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x04_GF_7.62mm' : generate_params( 4, "GMSTBV-GF", 7.62, False, True, {'1829170':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x05_GF_7.62mm' : generate_params( 5, "GMSTBV-GF", 7.62, False, True, {'1829183':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x06_GF_7.62mm' : generate_params( 6, "GMSTBV-GF", 7.62, False, True, {'1829196':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x07_GF_7.62mm' : generate_params( 7, "GMSTBV-GF", 7.62, False, True, {'1829206':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x08_GF_7.62mm' : generate_params( 8, "GMSTBV-GF", 7.62, False, True, {'1829219':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x09_GF_7.62mm' : generate_params( 9, "GMSTBV-GF", 7.62, False, True, {'1829222':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x10_GF_7.62mm' : generate_params(10, "GMSTBV-GF", 7.62, False, True, {'1829235':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x11_GF_7.62mm' : generate_params(11, "GMSTBV-GF", 7.62, False, True, {'1829248':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x12_GF_7.62mm' : generate_params(12, "GMSTBV-GF", 7.62, False, True, {'1829251':'12A 630V'}, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
     ###################################################################################################################
-    'GMSTBV_01x02_GF_7.62mm_MH' : generate_params( 2, "GMSTBV-GF", 7.62, False, True, {'1829154':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x03_GF_7.62mm_MH' : generate_params( 3, "GMSTBV-GF", 7.62, False, True, {'1829167':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x04_GF_7.62mm_MH' : generate_params( 4, "GMSTBV-GF", 7.62, False, True, {'1829170':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x05_GF_7.62mm_MH' : generate_params( 5, "GMSTBV-GF", 7.62, False, True, {'1829183':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x06_GF_7.62mm_MH' : generate_params( 6, "GMSTBV-GF", 7.62, False, True, {'1829196':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x07_GF_7.62mm_MH' : generate_params( 7, "GMSTBV-GF", 7.62, False, True, {'1829206':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x08_GF_7.62mm_MH' : generate_params( 8, "GMSTBV-GF", 7.62, False, True, {'1829219':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x09_GF_7.62mm_MH' : generate_params( 9, "GMSTBV-GF", 7.62, False, True, {'1829222':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x10_GF_7.62mm_MH' : generate_params(10, "GMSTBV-GF", 7.62, False, True, {'1829235':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x11_GF_7.62mm_MH' : generate_params(11, "GMSTBV-GF", 7.62, False, True, {'1829248':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1),
-    'GMSTBV_01x12_GF_7.62mm_MH' : generate_params(12, "GMSTBV-GF", 7.62, False, True, {'1829251':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1)
+    'GMSTBV_01x02_GF_7.62mm_MH' : generate_params( 2, "GMSTBV-GF", 7.62, False, True, {'1829154':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x03_GF_7.62mm_MH' : generate_params( 3, "GMSTBV-GF", 7.62, False, True, {'1829167':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x04_GF_7.62mm_MH' : generate_params( 4, "GMSTBV-GF", 7.62, False, True, {'1829170':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x05_GF_7.62mm_MH' : generate_params( 5, "GMSTBV-GF", 7.62, False, True, {'1829183':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x06_GF_7.62mm_MH' : generate_params( 6, "GMSTBV-GF", 7.62, False, True, {'1829196':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x07_GF_7.62mm_MH' : generate_params( 7, "GMSTBV-GF", 7.62, False, True, {'1829206':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x08_GF_7.62mm_MH' : generate_params( 8, "GMSTBV-GF", 7.62, False, True, {'1829219':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x09_GF_7.62mm_MH' : generate_params( 9, "GMSTBV-GF", 7.62, False, True, {'1829222':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x10_GF_7.62mm_MH' : generate_params(10, "GMSTBV-GF", 7.62, False, True, {'1829235':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x11_GF_7.62mm_MH' : generate_params(11, "GMSTBV-GF", 7.62, False, True, {'1829248':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance),
+    'GMSTBV_01x12_GF_7.62mm_MH' : generate_params(12, "GMSTBV-GF", 7.62, False, True, {'1829251':'12A 630V'}, mount_hole=True, mount_hole_to_pin=6.1, side_to_pin=9.1, min_pad_to_pad_clearance=seriesParams.GMSTB_min_pad_to_pad_clearance)
 }
-
-class seriesParams():
-    drill = 1.4
-    mount_drill = 2.4
-    mount_screw_head_r = 2.1
-    pin_Sx = 2.1
-    pin_Sy = 3.6
-    mount_screw_info = "ISO 1481-ST 2.2x6.5 C or ISO 7049-ST 2.2x6.5 C (http://www.fasteners.eu/standards/ISO/7049/)"
 
 #lock_cutout=
 

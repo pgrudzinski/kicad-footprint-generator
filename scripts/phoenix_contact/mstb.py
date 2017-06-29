@@ -38,7 +38,7 @@ def generate_one_footprint(model, params, options):
 
     ################################################# Pads #################################################
     kicad_mod.append(Pad(number=1, type=Pad.TYPE_THT, shape=Pad.SHAPE_RECT,
-                        at=[0, 0], size=[seriesParams.pin_Sx, seriesParams.pin_Sy], \
+                        at=[0, 0], size=[params.pin_Sx, params.pin_Sy], \
                         drill=seriesParams.drill, layers=globalParams.pin_layers))
     for p in range(1,params.num_pins):
         Y = 0
@@ -46,7 +46,7 @@ def generate_one_footprint(model, params, options):
 
         num = p+1
         kicad_mod.append(Pad(number=num, type=Pad.TYPE_THT, shape=Pad.SHAPE_OVAL,
-                            at=[X, Y], size=[seriesParams.pin_Sx, seriesParams.pin_Sy], \
+                            at=[X, Y], size=[params.pin_Sx, params.pin_Sy], \
                             drill=seriesParams.drill, layers=globalParams.pin_layers))
     if params.mount_hole:
         kicad_mod.append(Pad(number='""', type=Pad.TYPE_NPTH, shape=Pad.SHAPE_CIRCLE,
@@ -208,10 +208,10 @@ def generate_one_footprint(model, params, options):
 
     ################################################## Courtyard ##################################################
     #if params.angled:
-        #p1=[p1[0],-seriesParams.pin_Sy/2]
+        #p1=[p1[0],-params.pin_Sy/2]
     crtyd_top_left=v_offset(body_top_left, options.courtyard_distance)
     crtyd_bottom_right=v_offset(body_bottom_right, options.courtyard_distance)
-    kicad_mod.append(RectLine(start=round_crty_point(crtyd_top_left, options.courtyard_grid), end=round_crty_point(crtyd_bottom_right, options.courtyard_grid), layer='F.CrtYd'))
+    kicad_mod.append(RectLine(start=round_crty_point(crtyd_top_left, options.courtyard_grid), end=round_crty_point(crtyd_bottom_right, options.courtyard_grid), layer='F.CrtYd', width=options.courtyard_line_width))
 
     if params.mount_hole and options.courtyard_for_mountscrews:
         kicad_mod.append(Circle(center=mount_hole_right, radius=seriesParams.mount_screw_head_r+options.courtyard_distance, layer='B.CrtYd', width=options.courtyard_line_width))
@@ -245,17 +245,17 @@ def generate_one_footprint(model, params, options):
             layer='F.SilkS', width=options.silk_line_width))
         if options.with_fab_layer:
             kicad_mod.append(PolygoneLine(
-                polygone=create_pin1_marker_triangle(bottom_y = -seriesParams.pin_Sy/2- 0.75,
+                polygone=create_pin1_marker_triangle(bottom_y = -params.pin_Sy/2- 0.75,
                     dimensions = [1, 1], with_top_line = True),
                 layer='F.Fab', width=options.fab_line_width))
     else:
-        y_bottom_silk_marker = (silk_top_left[1] if silk_top_left[1] < -seriesParams.pin_Sy/2 else -seriesParams.pin_Sy/2) - 0.2
+        y_bottom_silk_marker = (silk_top_left[1] if silk_top_left[1] < -params.pin_Sy/2 else -params.pin_Sy/2) - 0.2
         kicad_mod.append(PolygoneLine(polygone=create_pin1_marker_triangle(y_bottom_silk_marker),
             layer='F.SilkS', width=options.silk_line_width))
         if options.with_fab_layer:
             kicad_mod.append(PolygoneLine(
                 polygone=create_pin1_marker_triangle(bottom_y = -0.5,
-                    dimensions = [seriesParams.pin_Sx - 0.2, -body_top_left[1]-0.5], with_top_line = False),
+                    dimensions = [params.pin_Sx - 0.2, -body_top_left[1]-0.5], with_top_line = False),
                 layer='F.Fab', width=options.fab_line_width))
 
     #################################################### 3d file ###################################################
