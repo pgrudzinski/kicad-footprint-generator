@@ -194,7 +194,7 @@ def generate_one_footprint(model, params, options):
             {'x':pi2[0], 'y':pi2[1]},
             {'x':pi2[0]+arc_to_side, 'y':pi2[1]}
         ]
-        kicad_mod.append(PolygoneLine(polygone=poly))
+        kicad_mod.append(PolygoneLine(polygone=poly, layer='F.SilkS', width=options.silk_line_width))
         if options.inner_details_on_fab:
             kicad_mod.append(PolygoneLine(polygone=poly, layer='F.Fab', width=options.fab_line_width))
 
@@ -255,7 +255,7 @@ def generate_one_footprint(model, params, options):
         if options.with_fab_layer:
             kicad_mod.append(PolygoneLine(
                 polygone=create_pin1_marker_triangle(bottom_y = -0.5,
-                    dimensions = [params.pin_Sx - 0.2, -body_top_left[1]-0.5], with_top_line = False),
+                    dimensions = [1.9, -body_top_left[1]-0.5], with_top_line = False),
                 layer='F.Fab', width=options.fab_line_width))
 
     #################################################### 3d file ###################################################

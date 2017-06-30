@@ -75,7 +75,7 @@ class OptionManager():
     def _useconfig_KLCv1_2(self):
         self.lib_name="Connectors_Phoenix"
         self.out_dir=self.lib_name+".pretty"+os.sep
-        self.packages_3d=self.lib_name+".3dshapes"+os.sep
+        self.packages_3d="${KISYS3DMOD}"+os.sep+self.lib_name+".3dshapes"+os.sep
 
         self.courtyard_distance = 0.5
         self.courtyard_grid = 0.01
@@ -104,7 +104,7 @@ class OptionManager():
     def _useconfig_TERA(self):
         self.lib_name="tera_Connectors_Phoenix"
         self.out_dir=self.lib_name+".pretty"+os.sep
-        self.packages_3d=self.lib_name+".3dshapes"+os.sep
+        self.packages_3d="${KISYS3DMOD}"+os.sep+self.lib_name+".3dshapes"+os.sep
 
         self.courtyard_distance = 0.5
         self.courtyard_grid = 0.01
